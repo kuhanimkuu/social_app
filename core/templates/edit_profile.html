@@ -1,0 +1,30 @@
+
+{% extends "base.html" %}
+
+{% block title %}Edit Profile{% endblock %}
+
+{% block content %}
+<h2 class="text-2xl font-bold mb-6">Edit Your Profile</h2>
+
+ <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">
+            Save Changes
+        </button>
+    </form>
+ {% if profile.profile_image %}
+        <div class="mt-4">
+            <p class="text-sm text-gray-600">Current Profile Image:</p>
+            <img src="https://res.cloudinary.com/dhonmc7sg/{{ profile.profile_image }}" 
+                 alt="Current Profile" class="h-24 w-24 rounded-full border mt-2">
+        </div>
+    {% endif %}
+</div>
+
+<a href="{% url 'profile' request.user.username %}" class="text-blue-600 hover:underline mt-6 inline-block">
+     Back to Profile
+</a>
+
+{% endblock %}

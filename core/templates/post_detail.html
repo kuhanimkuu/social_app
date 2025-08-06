@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Post by {{ post.user.username }} - SocialApp{% endblock %}
+
+
+{% block content %}
+<div class="max-w-xl mx-auto mt-8 bg-white rounded shadow p-6">
+    <!-- Post section -->
+    <div class="flex items-center mb-4">
+        <img src="https://res.cloudinary.com/dhonmc7sg/{{ post.uploader.profile_image|default:'' }}" alt="Profile"
+             class="h-10 w-10 rounded-full mr-3">
+        <div>
+            <p class="font-semibold">{{ post.uploader.username }}</p>
+            <p class="text-sm text-gray-500">{{ post.created_at|date:"F j, Y, g:i a" }}</p>
+        </div>
+    </div>
+
+    <p class="text-gray-800 mb-4">{{ post.caption }}</p>
+
+    {% if post.image %}
+        <img src="https://res.cloudinary.com/dhonmc7sg/{{ post.image }}" alt="Post image"
+             class="rounded w-full mb-4">
+    {% endif %}
+
+    <div class="flex items-center space-x-4 mt-2">
+        <span>{{ post.likes|default:0 }} Likes</span>
+    </div>
+
+    <hr class="my-6">
+
+    <!-- Comment Form -->
+    <form method="post" action="/api/post/{{ post.id }}/comment/" class="mb-6">
+        {% csrf_token %}
+        <textarea name="content" rows="3" required placeholder="Add a comment..."
+                  class="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:border-blue-500"></textarea>
+        <button type="submit"
+                class="mt-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">
+            Post Comment
+        </button>
+    </form>
+
+    <!-- Comments Section -->
+    <h2 class="text-lg font-semibold mb-2">Comments</h2>
+    {% if comments %}
+        {% for comment in comments %}
+            <div class="border-t border-gray-200 pt-2 mb-2">
+                <p class="text-sm font-semibold">{{ comment.user.username }}</p>
+                <p class="text-gray-700">{{ comment.content }}</p>
+                <p class="text-xs text-gray-400">{{ comment.created_at|date:"F j, Y, g:i a" }}</p>
+
+            </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-gray-500">No comments yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}Feed - SocialApp{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto mt-6">
+    <h1 class="text-3xl font-bold text-center text-blue-600 mb-6">Your Feed</h1>
+
+    {% for post in posts %}
+    <div class="bg-white rounded shadow p-6 mb-6">
+        <!-- User info -->
+        <div class="flex items-center mb-4">
+            <!-- Use placeholder profile image for now -->
+            <img src="https://ui-avatars.com/api/?name={{ post.uploader.username|urlencode }}&background=random" alt="Profile" class="h-10 w-10 rounded-full mr-3">
+
+            <div>
+                <p class="font-semibold">{{ post.uploader.username }}</p>
+                <p class="text-sm text-gray-500">{{ post.created_at|naturaltime }}</p>
+            </div>
+        </div>
+
+        <!-- Caption -->
+        <p class="text-gray-800 mb-4">{{ post.caption }}</p>
+
+        <!-- Image -->
+        {% if post.image %}
+            <img src="https://res.cloudinary.com/dhonmc7sg/{{ post.image }}" alt="Post image" class="rounded w-full mb-4">
+        {% endif %}
+
+        <!-- Likes and Link -->
+        <div class="flex items-center space-x-4">
+            <form action="{% url 'toggle_like' post.id %}" method="post">
+      {% csrf_token %}
+      <button type="submit">
+        {% if request.user.id in post.likes_user_ids %}
+           Unlike
+        {% else %}
+           Like
+        {% endif %}
+      </button>
+    </form>
+            {% if post.id %}
+                <a href="{% url 'post_detail' post.id %}" class="text-blue-600 hover:underline">View Post</a>
+            {% else %}
+                <span class="text-red-500">Invalid Post (no ID)</span>
+            {% endif %}
+        </div>
+    </div>
+{% empty %}
+    <p class="text-center text-gray-500">No posts to show yet. Follow users to see their posts here.</p>
+{% endfor %}
+</div>
+{% endblock %}
