@@ -51,19 +51,27 @@ class PostViewSet(viewsets.ModelViewSet):
     filterset_fields = ['uploader__username']
     def perform_create(self, serializer):
         serializer.save(uploader=self.request.user)
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
-    def like(self, request, pk=None):
+    @action(detail=True, methods=['post'], url_path='like')
+    def like_post(self, request, pk=None):
         post = self.get_object()
-        post.likes += 1
-        post.save()
-        return Response({'status': 'post liked', 'likes': post.likes}, status=status.HTTP_200_OK)
+        user = request.user
 
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
-    def dislike(self, request, pk=None):
+        if post.likes.filter(user=user).exists():
+            return Response({'detail': 'You already liked this post.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        Like.objects.create(post=post, user=user)
+        return Response({'detail': 'Post liked successfully.'}, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'], url_path='unlike')
+    def unlike_post(self, request, pk=None):
         post = self.get_object()
-        post.dislikes += 1
-        post.save()
-        return Response({'status': 'post disliked', 'dislikes': post.dislikes}, status=status.HTTP_200_OK)
+        user = request.user
+
+        like = Like.objects.filter(post=post, user=user).first()
+        if like:
+            like.delete()
+            return Response({'detail': 'Post unliked successfully.'}, status=status.HTTP_200_OK)
+        return Response({'detail': 'You have not liked this post.'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -389,22 +397,22 @@ def logout_view(request):
     messages.success(request, "Logged out successfully.")
     return redirect('login')
 
+@login_required
 def toggle_like_view(request, post_id):
-    headers = get_auth_headers(request)
-
+    headers = get_auth_headers(request) 
+    print("User:", request.user)
+    print("Authenticated?", request.user.is_authenticated)
     if request.method == 'POST':
-        response = requests.post(
-            f'{API_BASE_URL}posts/{post_id}/like/',
-            headers=headers
-        )
+        post = get_object_or_404(Post, id=post_id)
+        like = Like.objects.filter(user=request.user, post=post).first()
 
-        if response.status_code == 200:
-            messages.success(request, 'Liked successfully.')
-        elif response.status_code == 401:
-            messages.error(request, 'Login again. Session expired.')
+        if like:
+            like.delete()
+            messages.success(request, 'Like removed.')
         else:
-            messages.error(request, 'Failed to like the post.')
-
+            Like.objects.create(user=request.user, post=post)
+            messages.success(request, 'Post liked.')
+    
     return redirect(request.META.get('HTTP_REFERER', '/'))
 
 

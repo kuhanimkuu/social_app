@@ -7,7 +7,8 @@ def get_auth_headers(request):
     access_token = request.session.get('access_token')
     refresh_token = request.session.get('refresh_token')
     headers = {}
-
+    print("Access token:", access_token)
+    print("Refresh token:", refresh_token)
     if access_token:
         headers['Authorization'] = f'Bearer {access_token}'
 
@@ -32,5 +33,5 @@ def get_auth_headers(request):
                 request.session.pop('access_token', None)
                 request.session.pop('refresh_token', None)
                 headers = {}  # Unauthenticated
-
+    
     return headers
